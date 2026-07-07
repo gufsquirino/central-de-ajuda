@@ -1,7 +1,30 @@
 // Função serverless (Vercel) — Assistente da Central de Ajuda
 // Requer a variável de ambiente ANTHROPIC_API_KEY configurada no projeto Vercel.
 
+// Domínios autorizados a usar o assistente (widget embarcado em outras plataformas).
+// Adicione aqui cada plataforma que for receber o widget:
+const ORIGENS_PERMITIDAS = [
+  "https://snr.alynnegustavo.com.br",
+  // "https://outra-plataforma.com.br",
+];
+
+function aplicarCors(req, res) {
+  const origem = req.headers.origin || "";
+  if (ORIGENS_PERMITIDAS.includes(origem)) {
+    res.setHeader("Access-Control-Allow-Origin", origem);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Max-Age", "86400");
+  }
+  // Requisições do próprio domínio da central não enviam Origin de terceiros — passam direto.
+}
+
 export default async function handler(req, res) {
+  aplicarCors(req, res);
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
   if (req.method !== "POST") {
     return res.status(405).json({ erro: "Use POST" });
   }
